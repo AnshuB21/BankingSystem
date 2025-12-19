@@ -4,12 +4,17 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 //https://youtu.be/hSzCjqZs_uE?si=Od869ddGB6DPJWq9
 @Entity
@@ -17,8 +22,8 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users")   // good practice
-public class User {
+@Table(name = "users")
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -50,8 +55,8 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-//    @ManyToMany
-//    private List<String> roles;
+
+  private List<String> roles;
 
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "owner")
     private Card card;
@@ -61,6 +66,11 @@ public class User {
 
     @OneToMany (cascade = CascadeType.ALL, mappedBy = "owner", fetch= FetchType.LAZY)
     private List<Account> Account;
+
+    @Override
+    public Collection <? extends GrantedAuthority> getAuthorities (){
+        return roles.stream().map(SimpleGrantedAuthority :: new).collect(Collectors.toList());
+    }
 
 
 }
