@@ -67,10 +67,46 @@ public class User implements UserDetails {
     @OneToMany (cascade = CascadeType.ALL, mappedBy = "owner", fetch= FetchType.LAZY)
     private List<Account> Account;
 
+    // UserDetails methods
+    // =======================
+
     @Override
-    public Collection <? extends GrantedAuthority> getAuthorities (){
-        return roles.stream().map(SimpleGrantedAuthority :: new).collect(Collectors.toList());
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
     }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // you can add logic later
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // you can add logic later
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // you can add logic later
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true; // you can add logic later
+    }
+
 
 
 }
