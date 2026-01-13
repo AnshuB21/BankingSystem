@@ -1,6 +1,7 @@
 package Bank.BankingSystem;
 
 import Bank.BankingSystem.Service.JwtService;
+import Bank.BankingSystem.entity.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,6 +9,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -17,6 +21,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
@@ -30,6 +35,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         }
         jwtToken = jwtToken.startsWith("Bearer")? jwtToken.substring(7): jwtToken;
+        // Extract the username (subject) stored inside the JWT; this identifies *who* the token belongs to
+        String subject= jwtService.extractSubject(jwtToken);
+
+        //Set the authenticated user into the SecurityContext
+        //so we get the subject from the token than we extract the username from the subject, find it total details from the securitycontextholder
+        //if the user is not authenticated yet (context.getauthentication==null) then define what to do.
+        User user = (User)userDetailsService. loadUserByUsername(subject);
+
+        //import the security context holder. It is, stores “who is the user right now?”
+        // (username, roles, authentication status) so controllers and services can access it anywhere during the request.
+        var context = SecurityContextHolder.getContext();
+
+
+        // If a valid user is found AND no authentication is set yet,
+       // create an authenticated token from the user details
+        // and store it in the SecurityContext so Spring knows
+       // this request is already authenticated
+        if (user != null && context.getAuthentication() == null) {
+            var authenticationToken =
+                    new UsernamePasswordAuthenticationToken(
+                            user,                // authenticated user (principal)
+                            null,                // no credentials needed (JWT already validated)
+                            user.getAuthorities() // roles/permissions
+                    );
+
+            // Attach request details (IP, session info) to the authentication
+            authenticationToken.setDetails(request);
+
+            // Save authentication so controllers & security checks can access it
+            context.setAuthentication(authenticationToken);
+        }
+        filterChain.doFilter(request,response);
+
+
 
     }
 }
