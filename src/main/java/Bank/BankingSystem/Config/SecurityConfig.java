@@ -1,11 +1,10 @@
 package Bank.BankingSystem.Config;
 
-import Bank.BankingSystem.JwtAuthenticationFilter;
+import Bank.BankingSystem.filters.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -22,8 +21,14 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final JwtAuthenticationFilter authFilter;
-    private final AuthenticationProvider authenticationProvider;
+    private JwtAuthenticationFilter authFilter;
+    private AuthenticationProvider authenticationProvider;
+    public SecurityConfig(JwtAuthenticationFilter authFilter,
+                          AuthenticationProvider authenticationProvider) {
+        this.authFilter = authFilter;
+        this.authenticationProvider = authenticationProvider;
+    }
+
 
     //need to override the security filter chain by creating new bean for this filter chain
     @Bean // Register this method as the main Spring Security configuration
@@ -39,12 +44,14 @@ public class SecurityConfig {
                 // Define authorization rules for HTTP requests
                 .authorizeHttpRequests(auth -> auth
 
+
                         // Allow unauthenticated access to login & register endpoints
-                        .requestMatchers("/auth/login", "/auth/register").permitAll()
+                        .requestMatchers("/user/auth", "/user/register").permitAll()
 
                         // Require authentication (valid JWT) for all other endpoints
                         .anyRequest().authenticated()
                 )
+                .authenticationProvider(authenticationProvider)
 
                 // Do not create or use HTTP sessions; each request must carry its own JWT
                 .sessionManagement(session ->

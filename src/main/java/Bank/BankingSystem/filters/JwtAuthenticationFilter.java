@@ -1,4 +1,4 @@
-package Bank.BankingSystem;
+package Bank.BankingSystem.filters;
 
 import Bank.BankingSystem.Service.JwtService;
 import Bank.BankingSystem.entity.User;
@@ -6,8 +6,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,10 +16,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 // This is a jwtauth Filter that stays in  top of userpassword auth filter to validate the jwt token if its already in the application.
 @Component
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+
+    public JwtAuthenticationFilter(JwtService jwtService,
+                                   UserDetailsService userDetailsService) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+    }
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
